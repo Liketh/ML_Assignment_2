@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
-
+import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -25,8 +25,6 @@ st.set_page_config(page_title="Credit Card Default Prediction", layout="wide")
 
 st.title("💳 Credit Card Default Prediction – ML Assignment")
 
-
-# ===============================
 # Dataset Upload
 # ===============================
 uploaded_file = st.file_uploader("Upload UCI Credit Card CSV Dataset", type=["csv"])
@@ -37,39 +35,15 @@ if uploaded_file is not None:
     st.subheader("📄 Dataset Preview")
     st.dataframe(df.head())
 
+
+    # Preprocessing 
     # ===============================
-    # Preprocessing (Same as Notebook)
-    # ===============================
-    df.drop(columns=['ID'], inplace=True)
+    def preprocessing_test_file(df):
+        df.drop(columns=['ID'],inplace=True)
+        df.drop(columns=['default.payment.next.month'],inplace=True)
+        return df
 
-    # Outlier removal (IQR method)
-    outliers = ['LIMIT_BAL','AGE','BILL_AMT1','BILL_AMT2','BILL_AMT3','BILL_AMT4','BILL_AMT5','BILL_AMT6']
-    for col in outliers:
-        q1 = df[col].quantile(0.25)
-        q3 = df[col].quantile(0.75)
-        iqr = q3 - q1
-        df = df[(df[col] >= q1 - 1.5 * iqr) & (df[col] <= q3 + 1.5 * iqr)]
 
-    # Dataset balancing
-    df_0 = df[df['default.payment.next.month'] == 0]
-    df_1 = df[df['default.payment.next.month'] == 1]
-    df_0 = df_0.sample(len(df_1), random_state=42)
-    df = pd.concat([df_0, df_1]).sample(frac=1, random_state=42)
-
-    st.subheader("⚖️ Balanced Target Distribution")
-    st.bar_chart(df['default.payment.next.month'].value_counts())
-
-    # ===============================
-    # Train-Test Split
-    # ===============================
-    X = df.drop(columns=['default.payment.next.month'])
-    y = df['default.payment.next.month']
-
-    x_train, x_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
-    )
-
-    # ===============================
     # Model Selection
     # ===============================
     model_name = st.selectbox(
@@ -85,30 +59,30 @@ if uploaded_file is not None:
     )
 
     if model_name == 'Logistic Regression':
-        model = LogisticRegression(max_iter=1000)
+        model = joblib.load(r"models\lr1.pkl")
     elif model_name == 'Decision Tree':
-        model = DecisionTreeClassifier(max_depth=5, min_samples_split=5)
+        model = joblib.load(r"models\dt1.pkl")
     elif model_name == 'Random Forest':
-        model = RandomForestClassifier()
+        model = joblib.load(r"models\rf1.pkl")
     elif model_name == 'KNN':
-        model = KNeighborsClassifier()
+        model = joblib.load(r"models\KNN1.pkl")
     elif model_name == 'Naive Bayes':
-        model = GaussianNB()
+        model = joblib.load(r"models\GNB1.pkl")
     elif model_name == 'XGBoost':
-        model = XGBClassifier(random_state=49, use_label_encoder=False, eval_metric='logloss')
+        model = joblib.load(r"models\xgb1.pkl")
 
+
+    # Test Model
     # ===============================
-    # Train Model
-    # ===============================
-    start_time = time.time()
-    model.fit(x_train, y_train)
-    end_time = time.time()
-    exec_time = end_time - start_time
+
+    y_test = df['default.payment.next.month']
+    x_test = preprocessing_test_file(df)
+
 
     y_pred = model.predict(x_test)
     y_prob = model.predict_proba(x_test)[:, 1]
 
-    # ===============================
+
     # Metrics
     # ===============================
     st.subheader("📊 Model Evaluation Metrics")
@@ -123,9 +97,7 @@ if uploaded_file is not None:
     col5.metric("MCC", round(matthews_corrcoef(y_test, y_pred), 4))
     col6.metric("ROC AUC", round(roc_auc_score(y_test, y_prob), 4))
 
-    st.write(f"⏱ Training Time: {exec_time:.4f} seconds")
 
-    # ===============================
     # Classification Report
     # ===============================
     st.subheader("📄 Classification Report")
