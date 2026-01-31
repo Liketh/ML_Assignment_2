@@ -59,17 +59,17 @@ if uploaded_file is not None:
     )
 
     if model_name == 'Logistic Regression':
-        model = joblib.load(r"models\lr1.pkl")
+        model = joblib.load(r"models/lr1.pkl")
     elif model_name == 'Decision Tree':
-        model = joblib.load(r"models\dt1.pkl")
+        model = joblib.load(r"models/dt1.pkl")
     elif model_name == 'Random Forest':
-        model = joblib.load(r"models\rf1.pkl")
+        model = joblib.load(r"models/rf1.pkl")
     elif model_name == 'KNN':
-        model = joblib.load(r"models\KNN1.pkl")
+        model = joblib.load(r"models/KNN1.pkl")
     elif model_name == 'Naive Bayes':
-        model = joblib.load(r"models\GNB1.pkl")
+        model = joblib.load(r"models/GNB1.pkl")
     elif model_name == 'XGBoost':
-        model = joblib.load(r"models\xgb1.pkl")
+        model = joblib.load(r"models/xgb1.pkl")
 
 
     # Test Model
